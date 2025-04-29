@@ -27,7 +27,7 @@
     </repeater>
     <filter>
         <thumbnail/>
-        <urladd host="https://HOSTIP:8433"/>
+        <urladd host="https://${SERVER_IP}:8433"/>
         <flowtag enable="false" text=""/>
         <streamingbroker enable="true"/>
         <scrubber enable="false" action="overwrite"/>
@@ -71,7 +71,7 @@
         <tls keystore="JKS" keystoreFile="/opt/tak/certs/files/takserver.jks" keystorePass="atakatak" truststore="JKS" truststoreFile="/opt/tak/certs/files/truststore-root.jks" truststorePass="atakatak" context="TLSv1.2" keymanager="SunX509"/>
     </security>
     <federation missionFederationDisruptionToleranceRecencySeconds="43200">
-        <federation-server webBaseUrl="https://HOSTIP:8443/Marti">
+        <federation-server webBaseUrl="https://${SERVER_IP}:8443/Marti">
             <tls keystore="JKS" keystoreFile="/opt/tak/certs/files/takserver.jks" keystorePass="atakatak" truststore="JKS" truststoreFile="certs/files/fed-truststore.jks" truststorePass="atakatak" keymanager="SunX509"/>
             <v1Tls tlsVersion="TLSv1.2"/>
             <v1Tls tlsVersion="TLSv1.3"/>
