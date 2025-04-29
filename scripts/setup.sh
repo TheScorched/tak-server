@@ -224,17 +224,37 @@ password=$pwd"Meh1!"
 pgpwd="$(cat /dev/urandom | tr -dc '[:alpha:][:digit:]' | fold -w ${1:-11} | head -n 1)"
 pgpassword=$pgpwd"Meh1!"
 
-# get IP
-NIC=$(route | grep default | awk '{print $8}' | head -n 1)
-IP=$(ip addr show $NIC | grep -m 1 "inet " | awk '{print $2}' | cut -d "/" -f1)
+# === IP SETUP SECTION ===
 
-printf $info "\nProceeding with IP address: $IP\n"
+# Ask user if they want to set a custom SERVER_IP
+printf "\nWould you like to set a custom IP address? (y/n): "
+read set_custom_ip
+
+if [[ "$set_custom_ip" == "y" || "$set_custom_ip" == "Y" ]]; then
+    printf "\nEnter the IP address you would like to use: "
+    read custom_ip
+    SERVER_IP=$custom_ip
+    printf "\n[*] Using custom IP: $SERVER_IP\n"
+else
+    NIC=$(route | grep default | awk '{print $8}' | head -n 1)
+    IP=$(ip addr show $NIC | grep -m 1 "inet " | awk '{print $2}' | cut -d "/" -f1)
+    SERVER_IP=$IP
+    printf "\n[*] Using automatically detected IP: $SERVER_IP\n"
+fi
+
+export SERVER_IP
+
+# Update database password in CoreConfig
 sed -i "s/password=\".*\"/password=\"${pgpassword}\"/" tak/CoreConfig.xml
-# Replaces HOSTIP for rate limiter and Fed server. Database URL is a docker alias of tak-database
-sed -i "s/HOSTIP/$IP/g" tak/CoreConfig.xml
 
-# Replaces takserver.jks with $IP.jks
-sed -i "s/takserver.jks/$IP.jks/g" tak/CoreConfig.xml
+# Use envsubst to replace placeholders in CoreConfig
+# First, make sure the template has ${SERVER_IP} and not hardcoded HOSTIP
+envsubst '${SERVER_IP}' < tak/CoreConfig.xml > tak/CoreConfig_final.xml
+mv tak/CoreConfig_final.xml tak/CoreConfig.xml
+
+# Replace takserver.jks with SERVER_IP.jks (for certs)
+sed -i "s/takserver.jks/${SERVER_IP}.jks/g" tak/CoreConfig.xml
+
 
 # Better memory allocation:
 # By default TAK server allocates memory based upon the *total* on a machine. 
